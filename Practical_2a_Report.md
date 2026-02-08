@@ -4,7 +4,7 @@
 
 ## Question 1: Learning Behaviour Analysis
 
-The baseline neural network (2 hidden layers: 256, 128 neurons, ReLU activation) was trained for 20 epochs.
+The baseline neural network (2 hidden layers: 256, 128 neurons, ReLU activation) was trained for 50 epochs.
 
 -   **Training vs Validation**: The baseline model achieved a high training accuracy (~94%) but a lower validation accuracy (~89%), indicating overfitting.
 -   **Loss Analysis**: As training progressed, the training loss continued to decrease, while the validation loss began to plateau or increase after about 6-8 epochs, further confirming overfitting.

@@ -290,20 +290,20 @@ def run_experiment(name, model, train_ds, val_ds, num_epochs=20):
 
 # 1. Baseline Model
 baseline_model = create_model(use_dropout=False, use_batchnorm=False)
-baseline_history = run_experiment("Baseline", baseline_model, train_ds, val_ds, num_epochs=20)
+baseline_history = run_experiment("Baseline", baseline_model, train_ds, val_ds, num_epochs=50)
 
 # 2. Dropout Model
 dropout_model = create_model(use_dropout=True, use_batchnorm=False)
-dropout_history = run_experiment("Dropout", dropout_model, train_ds, val_ds, num_epochs=20)
+dropout_history = run_experiment("Dropout", dropout_model, train_ds, val_ds, num_epochs=50)
 
 # 3. Batch Normalization Model
 batchnorm_model = create_model(use_dropout=False, use_batchnorm=True)
-batchnorm_history = run_experiment("Batch Normalization", batchnorm_model, train_ds, val_ds, num_epochs=20)
+batchnorm_history = run_experiment("Batch Normalization", batchnorm_model, train_ds, val_ds, num_epochs=50)
 
 
 # --- PLOTTING RESULTS ---
 
-epochs_range = range(1, 21)
+epochs_range = range(1, 51)
 
 # Plot 1: Compare Validation Accuracy
 plt.figure(figsize=(10, 6))
