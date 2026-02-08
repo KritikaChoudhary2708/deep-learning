@@ -39,9 +39,18 @@ In this practical, we use the Fashion MNIST dataset consisting of 70,000 greysca
  into 60,000 training images and 10,000 test images. The idea is to train a **classifier** to identify the class value (what type of fashion item it is) given the image. We train and *tune* a model on the 60,000 training images and then evaluate how well it classifies the 10,000 test images that the model did not see during training. This task is an example of a **supervised learning** problem, where we are given both input and labels (targets) to learn from. This is in contrast to **unsupervised learning** where we only have inputs from which to learn patterns or **reinforcement learning** where an agent learns how to maximise a reward signal through interaction with its environment.
 """
 
+
 # Tensorflow has convenient modules for loading a number of standard datasets
 fashion_mnist = tf.keras.datasets.fashion_mnist
 (train_and_validation_images, train_and_validation_labels), (test_images, test_labels) = fashion_mnist.load_data()
+
+# Prepare Test Data
+test_images_tensor = tf.convert_to_tensor(test_images, dtype=tf.float32) / 255.0
+test_labels_tensor = tf.convert_to_tensor(test_labels, dtype=tf.int32)
+# Create batched test dataset for consistency with validation logic if needed, 
+# or use full-batch evaluation as per original code. The original code used full batch.
+# We'll pass the tensors directly to our new test_step.
+
 
 text_labels = ['T-shirt/top', 'Trouser', 'Pullover', 'Dress', 'Coat', 'Sandal', 'Shirt', 'Sneaker', 'Bag', 'Ankle boot']
 
@@ -222,11 +231,20 @@ def run_experiment(name, model, train_ds, val_ds, num_epochs=20):
         val_loss(loss)
         val_accuracy(label, logits)
     
+
+    @tf.function
+    def test_step(image, label):
+        logits = model(image, training=False)
+        t_loss = loss_object(label, logits)
+        return t_loss, logits
+
     history = {
         'train_loss': [],
         'train_acc': [],
         'val_loss': [],
-        'val_acc': []
+        'val_acc': [],
+        'test_loss': None,
+        'test_acc': None
     }
     
     for epoch in range(num_epochs):
@@ -249,8 +267,23 @@ def run_experiment(name, model, train_ds, val_ds, num_epochs=20):
         history['train_acc'].append(float(train_accuracy.result()))
         history['val_loss'].append(float(val_loss.result()))
         history['val_acc'].append(float(val_accuracy.result()))
+
+    # Final Test Evaluation
+    print(f"Evaluating {name} on Test Set...")
+    test_loss_metric = tf.keras.metrics.Mean(name='test_loss')
+    test_acc_metric = tf.keras.metrics.SparseCategoricalAccuracy(name='test_accuracy')
+    
+    # We use the global test_images_tensor and test_labels_tensor
+    t_loss, t_logits = test_step(test_images_tensor, test_labels_tensor)
+    test_loss_metric(t_loss)
+    test_acc_metric(test_labels_tensor, t_logits)
+    
+    history['test_loss'] = float(test_loss_metric.result())
+    history['test_acc'] = float(test_acc_metric.result())
+    print(f"Test Loss: {history['test_loss']:.3f}, Test Accuracy: {history['test_acc']:.3%}")
         
     return history
+
 
 
 # --- RUN EXPERIMENTS ---
@@ -315,3 +348,21 @@ plt.legend()
 plt.grid(True)
 plt.savefig('dropout_performance.png')
 print("Saved dropout_performance.png")
+
+# Plot 4: Question 1 specific - Baseline Training vs Validation
+plt.figure(figsize=(12, 5))
+plt.subplot(1, 2, 1)
+plt.plot(epochs_range, baseline_history['train_acc'], label='Train Acc')
+plt.plot(epochs_range, baseline_history['val_acc'], label='Val Acc')
+plt.title('Baseline: Training vs Validation Accuracy')
+plt.legend()
+plt.grid(True)
+
+plt.subplot(1, 2, 2)
+plt.plot(epochs_range, baseline_history['train_loss'], label='Train Loss')
+plt.plot(epochs_range, baseline_history['val_loss'], label='Val Loss')
+plt.title('Baseline: Training vs Validation Loss')
+plt.legend()
+plt.grid(True)
+plt.savefig('baseline_performance.png')
+print("Saved baseline_performance.png")
